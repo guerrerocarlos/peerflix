@@ -30,7 +30,7 @@ var truthy = function () {
 var createServer = function (e, opts) {
   var server = http.createServer()
   var index = opts.index
-  var getType = opts.type || mime.lookup.bind(mime)
+  var getType = opts.type || mime.getType
   var filter = opts.filter || truthy
 
   var onready = function () {
@@ -75,9 +75,10 @@ var createServer = function (e, opts) {
 
       var toEntry = function (file, i) {
         return {
-          name: file.name,
-          url: 'http://' + host + '/' + i,
-          length: file.length
+          name: file.path,
+          url: '/' + i,
+          length: file.length,
+          offset: file.offset
         }
       }
 
@@ -85,6 +86,7 @@ var createServer = function (e, opts) {
         totalLength: totalLength,
         downloaded: e.swarm.downloaded,
         uploaded: e.swarm.uploaded,
+        pieces: e.bitfield,
         downloadSpeed: parseInt(e.swarm.downloadSpeed(), 10),
         uploadSpeed: parseInt(e.swarm.uploadSpeed(), 10),
         totalPeers: totalPeers.length,
@@ -122,6 +124,7 @@ var createServer = function (e, opts) {
     if (u.pathname === '/.json') {
       var json = toJSON()
       response.setHeader('Content-Type', 'application/json; charset=utf-8')
+      response.setHeader('Access-Control-Allow-Origin', '*')
       response.setHeader('Content-Length', Buffer.byteLength(json))
       response.end(json)
       return
